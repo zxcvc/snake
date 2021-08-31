@@ -1,7 +1,7 @@
 use super::board::Board;
+use super::utils::rand_position_gen;
 use super::utils::Out;
 use crossterm::{event, terminal, Result};
-use rand::prelude::*;
 use std::{collections::linked_list::LinkedList, time::Duration};
 
 #[derive(PartialEq, Eq)]
@@ -36,7 +36,7 @@ impl<'a> Snake<'a> {
 
     pub fn render(&mut self) -> Result<()> {
         for &(x, y) in self.body.iter() {
-            self.out.print_by_position(x, y, "@")?;
+            self.out.print_by_position(x, y, "●")?;
         }
         self.out.restore()?;
         Ok(())
@@ -56,12 +56,27 @@ impl<'a> Snake<'a> {
         (x, y)
     }
 
+    fn on_body(&self, position: &(u16, u16)) -> bool {
+        for it in self.body.iter() {
+            if it == position {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn gen_food(&mut self) -> Result<()> {
-        let mut rng = thread_rng();
-        let x = rng.gen_range(2..58u16);
-        let y = rng.gen_range(2..28u16);
-        self.food = (x, y);
-        self.out.print_by_position(x, y, "#")?;
+        loop {
+            self.food = rand_position_gen(
+                self.board.left_top.0 + 2..self.board.right_bottom.0 - 2,
+                self.board.left_top.1 + 2..self.board.right_bottom.1 - 2,
+            );
+            if !self.on_body(&self.food) {
+                break;
+            }
+        }
+        print!("{:?}",self.food);
+        self.out.print_by_position(self.food.0, self.food.1, "🍓")?;
         Ok(())
     }
 
@@ -84,10 +99,10 @@ impl<'a> Snake<'a> {
                 return true;
             }
         }
-        if head.0 <= 2
-            || head.1 <= 2
-            || head.0 >= self.board.width - 2
-            || head.1 >= self.board.height - 2
+        if head.0 <= self.board.left_top.0
+            || head.1 <= self.board.left_top.1
+            || head.0 >= self.board.right_bottom.0
+            || head.1 >= self.board.right_bottom.1
         {
             return true;
         }

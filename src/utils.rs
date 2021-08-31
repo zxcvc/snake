@@ -1,6 +1,6 @@
 use crossterm::{self, cursor, style, terminal, ExecutableCommand, Result};
 use lazy_static::lazy_static;
-use std::{cell::RefCell, fmt::Display, io::Write, rc::Rc};
+use std::{cell::RefCell, fmt::Display, io::Write, ops::Range, rc::Rc};
 
 lazy_static! {
     static ref out: std::io::Stdout = std::io::stdout();
@@ -50,4 +50,13 @@ impl<'a> Out<'a> {
             .execute(cursor::RestorePosition)?;
         Ok(())
     }
+}
+
+use rand::prelude::*;
+
+pub fn rand_position_gen(x_rang: Range<u16>, y_rang: Range<u16>) -> (u16, u16) {
+    let mut rng = thread_rng();
+    let x = rng.gen_range(x_rang);
+    let y = rng.gen_range(y_rang);
+    (x, y)
 }
