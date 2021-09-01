@@ -65,7 +65,7 @@ impl<'a> Snake<'a> {
         false
     }
 
-    pub fn gen_food(&mut self) -> Result<()> {
+    pub fn gen_food(&mut self) {
         loop {
             self.food = rand_position_gen(
                 self.board.left_top.0 + 2..self.board.right_bottom.0 - 2,
@@ -75,8 +75,10 @@ impl<'a> Snake<'a> {
                 break;
             }
         }
-        print!("{:?}",self.food);
-        self.out.print_by_position(self.food.0, self.food.1, "🍓")?;
+    }
+
+    pub fn rend_food(&mut self) -> Result<()> {
+        self.out.print_by_position(self.food.0, self.food.1, "*")?;
         Ok(())
     }
 
@@ -89,7 +91,12 @@ impl<'a> Snake<'a> {
     }
 
     pub fn can_eat(&self) -> bool {
-        &self.food == self.body.front().unwrap()
+        // &self.food == self.body.front().unwrap()
+        if let Some(x) = self.body.front() {
+            return x == &self.food;
+        } else {
+            return false;
+        }
     }
 
     pub fn is_collide(&self) -> bool {
@@ -111,8 +118,11 @@ impl<'a> Snake<'a> {
 
     pub fn tick(&mut self) -> Result<()> {
         terminal::enable_raw_mode()?;
-        self.gen_food()?;
+        self.gen_food();
+        self.rend_food()?;
         loop {
+            self.rend_food()?;
+
             if event::poll(Duration::from_secs_f32(0.3))? {
                 match event::read()? {
                     event::Event::Key(e) => match e.code {
@@ -145,16 +155,21 @@ impl<'a> Snake<'a> {
                     _ => {}
                 }
             }
+
             if let Some(&(x, y)) = self.body.back() {
                 self.out.print_by_position(x, y, " ")?;
             }
+
             self.body.pop_back();
             let next = self.next_position(*self.body.front().unwrap());
             self.body.push_front(next);
+
             if self.can_eat() {
                 self.eat_food()?;
-                self.gen_food()?;
+                self.gen_food();
+                self.rend_food()?;
             }
+
             self.render()?;
             if self.is_collide() {
                 self.out.init()?;
