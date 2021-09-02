@@ -34,6 +34,19 @@ impl<'a> Snake<'a> {
         }
     }
 
+    pub fn get_score(&self) -> usize {
+        self.body.len() - 3
+    }
+
+    pub fn render_score(&mut self) -> Result<()> {
+        self.out.print_by_position(
+            self.board.width + 25,
+            self.board.height / 2,
+            format!("得分：{}", self.get_score()),
+        )?;
+        Ok(())
+    }
+
     pub fn render(&mut self) -> Result<()> {
         for &(x, y) in self.body.iter() {
             self.out.print_by_position(x, y, "●")?;
@@ -116,11 +129,12 @@ impl<'a> Snake<'a> {
         false
     }
 
-    pub fn tick(&mut self) -> Result<()> {
+    pub fn tick(&mut self) -> Result<usize> {
         terminal::enable_raw_mode()?;
         self.gen_food();
         self.rend_food()?;
         loop {
+            self.render_score()?;
             self.rend_food()?;
 
             if event::poll(Duration::from_secs_f32(0.3))? {
@@ -173,7 +187,7 @@ impl<'a> Snake<'a> {
             self.render()?;
             if self.is_collide() {
                 self.out.init()?;
-                std::process::exit(0);
+                return Ok(self.get_score());
             }
         }
     }

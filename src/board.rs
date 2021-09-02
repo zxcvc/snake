@@ -35,9 +35,8 @@ impl<'a> Board<'a> {
 
         (*self.out.out)
             .borrow_mut()
-            .execute(style::Print("\n\n"))?
+            .execute(style::Print("\r\n"))?
             .execute(cursor::SavePosition)?;
-
         Ok(())
     }
 }
